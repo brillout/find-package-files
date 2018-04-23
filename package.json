@@ -1,0 +1,15 @@
+{
+  "name": "@brillout/find-package-files",
+  "version": "0.1.0",
+  "main": "./find-package-files.js",
+  "dependencies": {
+    "find-up": "^2.1.0",
+    "glob-gitignore": "^1.0.6",
+    "ignore": "^3.3.7",
+    "reassert": "^1.1.8"
+  },
+  "repository": "github:brillout/find-package-files",
+  "publishConfig": {
+    "access": "public"
+  }
+}
