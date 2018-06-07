@@ -1,6 +1,6 @@
 {
   "name": "@brillout/find-package-files",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./find-package-files.js",
   "dependencies": {
     "find-up": "^2.1.0",

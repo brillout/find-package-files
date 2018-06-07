@@ -1,4 +1,5 @@
 const assert_internal = require('reassert/internal');
+const assert_usage = require('reassert/usage');
 //const glob = require('glob');
 const ignore_module = require('ignore');
 const glob_gitignore = require('glob-gitignore');
@@ -8,16 +9,16 @@ const fs = require('fs');
 
 module.exports = findPackageFiles;
 
-function findPackageFiles(filename, {only_dir, no_dir, cwd}) {
-    assert_internal(!filename.includes('/'));
-    assert_internal(cwd.startsWith('/'));
+function findPackageFiles(filename, {only_dir, no_dir, cwd, ignoreSubPackages}) {
+    assert_usage(!filename.includes('/'));
+    assert_usage(path_module.isAbsolute(cwd));
 
     const glob_pattern = '**/'+filename+(only_dir ? '/' : '');
 
     const glob_options = {
         cwd,
         nodir: no_dir, // doesn't seem to always work in `glob-gitignore` and `glob`
-        ignore: get_ignore({cwd}),
+        ignore: get_ignore({cwd, ignoreSubPackages}),
     };
 
     const paths_found = (
@@ -32,18 +33,24 @@ function findPackageFiles(filename, {only_dir, no_dir, cwd}) {
     return paths_found;
 }
 
-function get_ignore({cwd}) {
+function get_ignore({cwd, ignoreSubPackages}) {
+    const ignore = ignore_module();
+
     const gitignore = get_gitignore_content({cwd});
+    const gitignore_content = get_gitignore_content({cwd}) || 'node_modules/';
+    ignore.add(gitignore_content);
 
- // if( ! gitignore ) {
- //     return '**/node_modules/**/*';
- // }
-
-    const gitignore_content = (
-        get_gitignore_content({cwd}) || 'node_modules/'
-    );
-
-    const ignore = ignore_module().add(gitignore_content);
+    if( ignoreSubPackages ) {
+        const packageJsonFiles = findPackageFiles('package.json', {cwd, no_dir: true});
+        const subPackages = (
+            packageJsonFiles
+            .map(packageJsonFile => path_module.dirname(packageJsonFile))
+            .filter(subPackageRoot => subPackageRoot!==cwd)
+            .map(subPackageRoot => path_module.relative(cwd, subPackageRoot))
+            .map(subPackagePath => subPackagePath.split(path_module.sep).join('/')+'/')
+        );
+        ignore.add(subPackages.join('\n'));
+    }
 
     return ignore;
 }
